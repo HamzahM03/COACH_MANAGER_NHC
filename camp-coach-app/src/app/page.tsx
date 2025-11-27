@@ -1,8 +1,7 @@
-// src/app/page.tsx  (or app/page.tsx if no src)
 import { supabase } from "@/lib/supabaseClient";
 
 export default async function Home() {
-  // simple test: try to read 1 player
+  // Try to read 1 player from the database
   const { data, error } = await supabase
     .from("players")
     .select("*")
@@ -20,11 +19,14 @@ export default async function Home() {
         )}
 
         {!error && data && data.length > 0 && (
-          <p>Supabase is connected! First player: {data[0].first_name} {data[0].last_name}</p>
+          <p>
+            Supabase is connected! First player:{" "}
+            <strong>{data[0].first_name} {data[0].last_name}</strong>
+          </p>
         )}
 
         {!error && data && data.length === 0 && (
-          <p>Supabase is connected, but no players yet.</p>
+          <p>Supabase is connected, but there are no players yet.</p>
         )}
       </div>
     </main>
