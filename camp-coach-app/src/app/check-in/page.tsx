@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 type Player = {
@@ -11,10 +11,30 @@ type Player = {
   notes: string | null;
 };
 
+type PlayerPackage = {
+  id: string;
+  sessions_total: number;
+  sessions_used: number;
+};
+
+type TodayCheckIn = {
+  id: string;
+  created_at: string;
+  date: string;
+  players: {
+    first_name: string;
+    last_name: string;
+  } | null;
+};
+
 export default function CheckInPage() {
   const [query, setQuery] = useState("");
   const [players, setPlayers] = useState<Player[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+
+  const [activePackage, setActivePackage] = useState<PlayerPackage | null>(
+    null
+  );
 
   const [searchLoading, setSearchLoading] = useState(false);
   const [checkInLoading, setCheckInLoading] = useState(false);
@@ -22,11 +42,42 @@ export default function CheckInPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
+  const [todayCheckIns, setTodayCheckIns] = useState<TodayCheckIn[]>([]);
+  const [todayLoading, setTodayLoading] = useState(false);
+
+  // Load today's check-ins on page load
+  useEffect(() => {
+    loadTodayCheckIns();
+  }, []);
+
+  async function loadTodayCheckIns() {
+    setTodayLoading(true);
+    setErrorMsg(null);
+
+    const today = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+
+    const { data, error } = await supabase
+      .from("attendance")
+      .select("id, created_at, date, players(first_name,last_name)")
+      .eq("date", today)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error(error);
+      // don't hard-fail the page over this, just show no list
+    } else {
+      setTodayCheckIns((data || []) as TodayCheckIn[]);
+    }
+
+    setTodayLoading(false);
+  }
+
   async function handleSearch(e: FormEvent) {
     e.preventDefault();
     setErrorMsg(null);
     setSuccessMsg(null);
     setSelectedPlayer(null);
+    setActivePackage(null);
     setSearchLoading(true);
 
     const trimmed = query.trim();
@@ -58,6 +109,37 @@ export default function CheckInPage() {
     setSearchLoading(false);
   }
 
+  async function loadActivePackage(playerId: string) {
+    setActivePackage(null);
+
+    const { data, error } = await supabase
+      .from("player_packages")
+      .select("id, sessions_total, sessions_used")
+      .eq("player_id", playerId)
+      .order("purchased_at", { ascending: true });
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    const list = (data || []) as PlayerPackage[];
+    const pkg = list.find((p) => p.sessions_used < p.sessions_total);
+
+    if (pkg) {
+      setActivePackage(pkg);
+    } else {
+      setActivePackage(null);
+    }
+  }
+
+  async function handleSelectPlayer(player: Player) {
+    setSelectedPlayer(player);
+    setSuccessMsg(null);
+    setErrorMsg(null);
+    await loadActivePackage(player.id);
+  }
+
   async function handleCheckIn() {
     if (!selectedPlayer) return;
 
@@ -65,21 +147,56 @@ export default function CheckInPage() {
     setSuccessMsg(null);
     setCheckInLoading(true);
 
-    const { error } = await supabase.from("attendance").insert([
-      {
-        player_id: selectedPlayer.id,
-        // date will default to today
-      },
-    ]);
+    // 1) Insert attendance row
+    const { error: attendanceError } = await supabase
+      .from("attendance")
+      .insert([
+        {
+          player_id: selectedPlayer.id,
+          // date defaults to today
+        },
+      ]);
 
-    if (error) {
-      console.error(error);
-      setErrorMsg(error.message);
-    } else {
-      setSuccessMsg(
-        `Checked in ${selectedPlayer.first_name} ${selectedPlayer.last_name} for today.`
-      );
+    if (attendanceError) {
+      console.error(attendanceError);
+      setErrorMsg(attendanceError.message);
+      setCheckInLoading(false);
+      return;
     }
+
+    // 2) If they have an active package, increment sessions_used
+    if (activePackage) {
+      const { error: pkgError } = await supabase
+        .from("player_packages")
+        .update({
+          sessions_used: activePackage.sessions_used + 1,
+        })
+        .eq("id", activePackage.id);
+
+      if (pkgError) {
+        console.error(pkgError);
+        setErrorMsg(
+          "Checked in, but failed to update package sessions. You may want to adjust manually."
+        );
+      } else {
+        const updated: PlayerPackage = {
+          ...activePackage,
+          sessions_used: activePackage.sessions_used + 1,
+        };
+        setActivePackage(updated);
+      }
+    }
+
+    setSuccessMsg(
+      `Checked in ${selectedPlayer.first_name} ${selectedPlayer.last_name} for today.${
+        activePackage
+          ? " Session deducted from their package."
+          : " (No active package on file.)"
+      }`
+    );
+
+    // Refresh today's check-ins list
+    await loadTodayCheckIns();
 
     setCheckInLoading(false);
   }
@@ -126,11 +243,7 @@ export default function CheckInPage() {
                       ? "bg-blue-50"
                       : "hover:bg-gray-50"
                   }`}
-                  onClick={() => {
-                    setSelectedPlayer(player);
-                    setSuccessMsg(null);
-                    setErrorMsg(null);
-                  }}
+                  onClick={() => handleSelectPlayer(player)}
                 >
                   <div>
                     <div className="font-medium">
@@ -156,7 +269,7 @@ export default function CheckInPage() {
           )}
         </div>
 
-        {/* Selected player + check-in button */}
+        {/* Selected player + check-in button + package info */}
         <div className="border rounded-md p-3 space-y-2">
           <h2 className="text-sm font-semibold">Selected Player</h2>
           {selectedPlayer ? (
@@ -173,10 +286,31 @@ export default function CheckInPage() {
                 </p>
               )}
 
+              <div className="mt-2 text-xs">
+                {activePackage ? (
+                  <p>
+                    Package sessions:{" "}
+                    <strong>
+                      {activePackage.sessions_used} /{" "}
+                      {activePackage.sessions_total}
+                    </strong>{" "}
+                    used (
+                    {activePackage.sessions_total -
+                      activePackage.sessions_used}{" "}
+                    remaining)
+                  </p>
+                ) : (
+                  <p className="text-gray-500">
+                    No active package with remaining sessions. This will be a
+                    drop-in unless they buy a package.
+                  </p>
+                )}
+              </div>
+
               <button
                 onClick={handleCheckIn}
                 disabled={checkInLoading}
-                className="mt-2 w-full bg-green-600 text-white rounded-md py-2 text-sm font-medium hover:bg-green-700 disabled:opacity-60"
+                className="mt-3 w-full bg-green-600 text-white rounded-md py-2 text-sm font-medium hover:bg-green-700 disabled:opacity-60"
               >
                 {checkInLoading ? "Checking in..." : "Check In for Today"}
               </button>
@@ -185,6 +319,36 @@ export default function CheckInPage() {
             <p className="text-xs text-gray-500">
               No player selected. Click a player from the list above.
             </p>
+          )}
+        </div>
+
+        {/* Today's check-ins */}
+        <div className="border rounded-md p-3 space-y-2">
+          <h2 className="text-sm font-semibold">Today&apos;s Check-Ins</h2>
+          {todayLoading ? (
+            <p className="text-xs text-gray-500">Loading...</p>
+          ) : todayCheckIns.length === 0 ? (
+            <p className="text-xs text-gray-500">
+              Nobody checked in yet today.
+            </p>
+          ) : (
+            <ul className="space-y-1 max-h-40 overflow-y-auto text-xs">
+              {todayCheckIns.map((entry) => (
+                <li key={entry.id} className="flex justify-between">
+                  <span>
+                    {entry.players
+                      ? `${entry.players.first_name} ${entry.players.last_name}`
+                      : "Unknown player"}
+                  </span>
+                  <span className="text-gray-500">
+                    {new Date(entry.created_at).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
       </div>
