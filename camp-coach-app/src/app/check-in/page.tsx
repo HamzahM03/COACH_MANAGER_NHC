@@ -24,8 +24,9 @@ type TodayCheckIn = {
   players: {
     first_name: string;
     last_name: string;
-  } | null;
+  }[]; //  array of players
 };
+
 
 export default function CheckInPage() {
   const [query, setQuery] = useState("");
@@ -333,11 +334,14 @@ export default function CheckInPage() {
             </p>
           ) : (
             <ul className="space-y-1 max-h-40 overflow-y-auto text-xs">
-              {todayCheckIns.map((entry) => (
+              {todayCheckIns.map((entry) => {
+              const player = entry.players?.[0]; // take first player from the array
+
+              return (
                 <li key={entry.id} className="flex justify-between">
                   <span>
-                    {entry.players
-                      ? `${entry.players.first_name} ${entry.players.last_name}`
+                    {player
+                      ? `${player.first_name} ${player.last_name}`
                       : "Unknown player"}
                   </span>
                   <span className="text-gray-500">
@@ -347,7 +351,9 @@ export default function CheckInPage() {
                     })}
                   </span>
                 </li>
-              ))}
+              );
+            })}
+
             </ul>
           )}
         </div>
