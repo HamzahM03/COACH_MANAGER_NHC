@@ -244,7 +244,17 @@ export default function CheckInPage() {
                       ? "bg-blue-50"
                       : "hover:bg-gray-50"
                   }`}
-                  onClick={() => handleSelectPlayer(player)}
+                  onClick={() => {
+                    if (selectedPlayer?.id === player.id) {
+                      setSelectedPlayer(null);
+                      setActivePackage(null);
+                      setSuccessMsg(null);
+                      setErrorMsg(null);
+                    } else {
+                      handleSelectPlayer(player);
+                    }
+                  }}                  
+                  
                 >
                   <div>
                     <div className="font-medium">
