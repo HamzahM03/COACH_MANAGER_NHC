@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
+
 
 type Player = {
   id: string;
@@ -119,39 +121,42 @@ export default function PlayersPage() {
                 key={player.id}
                 className="py-3 text-sm flex justify-between items-start"
               >
-                <div>
-                  <div className="font-medium">
-                    {player.first_name} {player.last_name}
-                  </div>
+              <div>
+                <Link
+                  href={`/players/${player.id}`}
+                  className="font-medium hover:underline"
+                >
+                  {player.first_name} {player.last_name}
+                </Link>
 
-                  <div className="text-xs text-gray-500">
-                    {player.phone || "No phone on file"}
-                  </div>
+                <div className="text-xs text-gray-500">
+                  {player.phone || "No phone on file"}
+                </div>
 
-                  {player.notes && (
-                    <div className="text-xs text-gray-400">
-                      Notes: {player.notes}
-                    </div>
+                {player.notes && (
+                  <div className="text-xs text-gray-400">
+                    Notes: {player.notes}
+                  </div>
+                )}
+
+                <div className="mt-1 text-xs">
+                  {player.activePackage ? (
+                    <span className="text-green-600 font-medium">
+                      {player.activePackage.sessions_total -
+                        player.activePackage.sessions_used}{" "}
+                      sessions remaining
+                    </span>
+                  ) : (
+                    <span className="text-red-500">No active package</span>
                   )}
-
-                  {/* Package status */}
-                  <div className="mt-1 text-xs">
-                    {player.activePackage ? (
-                      <span className="text-green-600 font-medium">
-                        {player.activePackage.sessions_total -
-                          player.activePackage.sessions_used}{" "}
-                        sessions remaining
-                      </span>
-                    ) : (
-                      <span className="text-red-500">No active package</span>
-                    )}
-                  </div>
                 </div>
+              </div>
 
-                <div className="text-xs text-gray-400 text-right">
-                  {new Date(player.created_at).toLocaleDateString()}
-                </div>
-              </li>
+              <div className="text-xs text-gray-400 text-right">
+                {new Date(player.created_at).toLocaleDateString()}
+              </div>
+            </li>
+
             ))}
           </ul>
         )}
