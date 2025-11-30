@@ -39,13 +39,20 @@ export default function Home() {
           >
             View All Players
           </Link>
-          
+
           <Link
             href="/expenses"
             className="block w-full text-center bg-orange-600 text-white rounded-md py-2 text-sm font-medium hover:bg-orange-700"
           >
             Track Expenses
         </Link>
+        <Link
+          href="/summary"
+          className="block w-full text-center bg-orange-600 text-white rounded-md py-2 text-sm font-medium hover:bg-orange-700"
+        >
+          Monthly Summary & Profit
+        </Link>
+
 
         </div>
       </div>
