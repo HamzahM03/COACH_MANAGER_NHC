@@ -1,6 +1,8 @@
 import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
 
+//player[id] page
+
 type Player = {
   id: string;
   first_name: string;

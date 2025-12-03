@@ -1,5 +1,7 @@
 "use client";
 
+//expenses page
+
 import { useEffect, useState, FormEvent } from "react";
 import { supabase } from "@/lib/supabaseClient";
 

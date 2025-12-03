@@ -1,3 +1,5 @@
+//summary page
+
 import { supabase } from "@/lib/supabaseClient";
 
 type RevenueRow = {
