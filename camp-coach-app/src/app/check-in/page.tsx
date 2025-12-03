@@ -24,8 +24,9 @@ type TodayCheckIn = {
   players: {
     first_name: string;
     last_name: string;
-  }[]; //  array of players
+  } | null;
 };
+
 
 
 export default function CheckInPage() {
@@ -52,26 +53,36 @@ export default function CheckInPage() {
   }, []);
 
   async function loadTodayCheckIns() {
-    setTodayLoading(true);
-    setErrorMsg(null);
+  setTodayLoading(true);
+  setErrorMsg(null);
 
-    const today = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+  const today = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
 
-    const { data, error } = await supabase
-      .from("attendance")
-      .select("id, created_at, date, players(first_name,last_name)")
-      .eq("date", today)
-      .order("created_at", { ascending: false });
+  const { data, error } = await supabase
+    .from("attendance")
+    .select("id, created_at, date, players(first_name,last_name)")
+    .eq("date", today)
+    .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error(error);
-      // don't hard-fail the page over this, just show no list
-    } else {
-      setTodayCheckIns((data || []) as TodayCheckIn[]);
-    }
+  if (error) {
+    console.error(error);
+    setTodayCheckIns([]);
+  } else {
+    const safeData: TodayCheckIn[] = (data ?? []).map((row: any) => ({
+      id: row.id,
+      created_at: row.created_at,
+      date: row.date,
+      // handle both “object” and “array” just in case Supabase types are funky
+      players: Array.isArray(row.players)
+        ? row.players[0] ?? null
+        : row.players ?? null,
+    }));
 
-    setTodayLoading(false);
+    setTodayCheckIns(safeData);
   }
+
+  setTodayLoading(false);
+}
 
   async function handleSearch(e: FormEvent) {
     e.preventDefault();
@@ -256,7 +267,7 @@ export default function CheckInPage() {
                   }}                  
                   
                 >
-                  <div>
+                  <div className="text-black">
                     <div className="font-medium">
                       {player.first_name} {player.last_name}
                     </div>
@@ -334,7 +345,7 @@ export default function CheckInPage() {
         </div>
 
         {/* Today's check-ins */}
-        <div className="border rounded-md p-3 space-y-2">
+        <div className="border rounded-md p-3 space-y-2 text-black">
           <h2 className="text-sm font-semibold">Today&apos;s Check-Ins</h2>
           {todayLoading ? (
             <p className="text-xs text-gray-500">Loading...</p>
@@ -345,26 +356,26 @@ export default function CheckInPage() {
           ) : (
             <ul className="space-y-1 max-h-40 overflow-y-auto text-xs">
               {todayCheckIns.map((entry) => {
-              const player = entry.players?.[0]; // take first player from the array
+                const player = entry.players;
 
-              return (
-                <li key={entry.id} className="flex justify-between">
-                  <span>
-                    {player
-                      ? `${player.first_name} ${player.last_name}`
-                      : "Unknown player"}
-                  </span>
-                  <span className="text-gray-500">
-                    {new Date(entry.created_at).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
-                </li>
-              );
-            })}
-
+                return (
+                  <li key={entry.id} className="flex justify-between">
+                    <span>
+                      {player
+                        ? `${player.first_name} ${player.last_name}`
+                        : "Unknown player"}
+                    </span>
+                    <span className="text-gray-500">
+                      {new Date(entry.created_at).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </li>
+                );
+              })}
             </ul>
+
           )}
         </div>
       </div>

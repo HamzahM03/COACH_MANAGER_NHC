@@ -48,7 +48,7 @@ export default function PlayersPage() {
         return;
       }
 
-      const basePlayers = (playersData || []) as Player[];
+      const basePlayers = (playersData ?? []) as Player[]
 
       // 2) For each player, get their active package (if any)
       const withPackages = await Promise.all(
