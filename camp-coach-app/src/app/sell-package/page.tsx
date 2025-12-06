@@ -3,7 +3,7 @@
 //sell package page
 
 import { useEffect, useState, FormEvent } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabase/client";
 
 type Player = {
   id: string;

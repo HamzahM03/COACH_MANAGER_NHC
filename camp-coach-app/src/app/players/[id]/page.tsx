@@ -1,44 +1,46 @@
-import { supabase } from "@/lib/supabaseClient";
-import Link from "next/link";
+import { createServerSupabase } from "@/lib/supabase/server"
+import Link from "next/link"
 
-//player[id] page
+
+// player/[id] page
 
 type Player = {
-  id: string;
-  first_name: string;
-  last_name: string;
-  phone: string | null;
-  notes: string | null;
-  created_at: string;
-};
+  id: string
+  first_name: string
+  last_name: string
+  phone: string | null
+  notes: string | null
+  created_at: string
+}
 
 type PlayerPackage = {
-  id: string;
-  sessions_total: number;
-  sessions_used: number;
-  price_cents: number;
-  purchased_at: string;
-};
+  id: string
+  sessions_total: number
+  sessions_used: number
+  price_cents: number
+  purchased_at: string
+}
 
 type AttendanceRow = {
-  id: string;
-  date: string;
-  created_at: string;
-};
+  id: string
+  date: string
+  created_at: string
+}
 
 export default async function PlayerProfilePage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string }
 }) {
-  const {id:playerId} = await params;
+  const supabase = createServerSupabase() // 👈 create server client once
+  const playerId = params.id
 
   // 1) Load player
   const { data: playerData, error: playerError } = await supabase
     .from("players")
     .select("*")
     .eq("id", playerId)
-    .single();
+    .single()
 
   if (playerError || !playerData) {
     return (
@@ -57,19 +59,19 @@ export default async function PlayerProfilePage({
           </div>
         </div>
       </main>
-    );
+    )
   }
 
-  const player = playerData as Player;
+  const player = playerData as Player
 
   // 2) Load package history
   const { data: pkgData } = await supabase
     .from("player_packages")
     .select("id, sessions_total, sessions_used, price_cents, purchased_at")
     .eq("player_id", playerId)
-    .order("purchased_at", { ascending: false });
+    .order("purchased_at", { ascending: false })
 
-  const packages = (pkgData || []) as PlayerPackage[];
+  const packages = (pkgData || []) as PlayerPackage[]
 
   // 3) Load recent attendance
   const { data: attData } = await supabase
@@ -77,13 +79,13 @@ export default async function PlayerProfilePage({
     .select("id, date, created_at")
     .eq("player_id", playerId)
     .order("date", { ascending: false })
-    .limit(20);
+    .limit(20)
 
-  const attendance = (attData || []) as AttendanceRow[];
+  const attendance = (attData || []) as AttendanceRow[]
 
   const activePackage = packages.find(
-    (p) => p.sessions_used < p.sessions_total
-  );
+    (p) => p.sessions_used < p.sessions_total,
+  )
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -198,5 +200,5 @@ export default async function PlayerProfilePage({
         </section>
       </div>
     </main>
-  );
+  )
 }

@@ -3,7 +3,7 @@
 //register page
 
 import { useState, FormEvent } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabase/client";
 
 export default function RegisterPlayerPage() {
   const [firstName, setFirstName] = useState("");

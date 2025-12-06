@@ -1,6 +1,6 @@
-//summary page
+// summary page
 
-import { supabase } from "@/lib/supabaseClient";
+import { createServerSupabase } from "@/lib/supabase/server";
 
 type RevenueRow = {
   price_cents: number;
@@ -17,6 +17,8 @@ function formatCurrency(cents: number) {
 }
 
 export default async function SummaryPage() {
+  const supabase = createServerSupabase(); // 👈 server client
+
   // figure out current month range
   const now = new Date();
   const year = now.getFullYear();
