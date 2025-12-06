@@ -4,13 +4,9 @@
 
 import { useEffect, useState, FormEvent } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { Player} from "@/types/players"
 
-type Player = {
-  id: string;
-  first_name: string;
-  last_name: string;
-  phone: string | null;
-};
+
 
 type Package = {
   id: string;

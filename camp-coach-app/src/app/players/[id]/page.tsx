@@ -1,25 +1,8 @@
 import { createServerSupabase } from "@/lib/supabase/server"
 import Link from "next/link"
-
+import { Player, PlayerPackage} from "@/types/players"
 
 // player/[id] page
-
-type Player = {
-  id: string
-  first_name: string
-  last_name: string
-  phone: string | null
-  notes: string | null
-  created_at: string
-}
-
-type PlayerPackage = {
-  id: string
-  sessions_total: number
-  sessions_used: number
-  price_cents: number
-  purchased_at: string
-}
 
 type AttendanceRow = {
   id: string
@@ -30,10 +13,14 @@ type AttendanceRow = {
 export default async function PlayerProfilePage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
-  const supabase = createServerSupabase() // 👈 create server client once
-  const playerId = params.id
+
+  const { id: playerId } = await params
+
+
+  const supabase = createServerSupabase() // create server client once
+  
 
   // 1) Load player
   const { data: playerData, error: playerError } = await supabase

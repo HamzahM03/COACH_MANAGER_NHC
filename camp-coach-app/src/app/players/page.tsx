@@ -5,24 +5,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
+import { Player, PlayerPackage as PlayerPackageFull} from "@/types/players"
 
 
-type Player = {
-  id: string;
-  first_name: string;
-  last_name: string;
-  phone: string | null;
-  notes: string | null;
-  created_at: string;
-};
+type PlayerPackageSummary = Pick<PlayerPackageFull, "sessions_total" | "sessions_used">
 
-type PlayerPackage = {
-  sessions_total: number;
-  sessions_used: number;
-};
 
 type PlayerWithPackage = Player & {
-  activePackage: PlayerPackage | null;
+  activePackage: PlayerPackageSummary | null;
 };
 
 export default function PlayersPage() {
@@ -66,7 +56,7 @@ export default function PlayersPage() {
 
           return {
             ...player,
-            activePackage: active as PlayerPackage | null,
+            activePackage: active as PlayerPackageSummary | null,
           };
         })
       );
