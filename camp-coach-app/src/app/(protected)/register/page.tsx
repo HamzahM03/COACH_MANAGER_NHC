@@ -3,7 +3,9 @@
 //register page
 
 import { useState, FormEvent } from "react";
-import { supabase } from "@/lib/supabase/client";
+import { createBrowserSupabase } from "@/lib/supabase/client";
+
+const supabase = createBrowserSupabase();
 
 export default function RegisterPlayerPage() {
   const [firstName, setFirstName] = useState("");

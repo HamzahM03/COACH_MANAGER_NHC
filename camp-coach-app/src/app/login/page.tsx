@@ -2,11 +2,13 @@
 
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase/client";
-
+import { createBrowserSupabase } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
+    const supabase = createBrowserSupabase();
+
+    
   const [email, setEmail] = useState("nhc@gmail.com"); // prefill for you
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);

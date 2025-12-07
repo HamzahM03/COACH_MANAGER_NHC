@@ -3,7 +3,9 @@
 //sell package page
 
 import { useEffect, useState, FormEvent } from "react";
-import { supabase } from "@/lib/supabase/client";
+import { createBrowserSupabase } from "@/lib/supabase/client";
+
+const supabase = createBrowserSupabase();
 import { Player} from "@/types/players"
 
 

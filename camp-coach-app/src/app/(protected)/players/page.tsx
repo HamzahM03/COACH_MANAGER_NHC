@@ -4,7 +4,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase/client";
+import { createBrowserSupabase } from "@/lib/supabase/client";
+
+const supabase = createBrowserSupabase();
 import { Player, PlayerPackage as PlayerPackageFull} from "@/types/players"
 
 

@@ -3,7 +3,9 @@
 // Check-in page
 
 import { useState, FormEvent, useEffect } from "react"
-import { supabase } from "@/lib/supabase/client" // client-side Supabase
+import { createBrowserSupabase } from "@/lib/supabase/client";
+
+const supabase = createBrowserSupabase();
 
 type Player = {
   id: string

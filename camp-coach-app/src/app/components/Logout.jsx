@@ -1,6 +1,7 @@
 "use client";
+import { createBrowserSupabase } from "@/lib/supabase/client";
 
-import { supabase } from "@/lib/supabase/client";
+const supabase = createBrowserSupabase();
 import { useRouter } from "next/navigation";
 
 export function LogoutButton() {
