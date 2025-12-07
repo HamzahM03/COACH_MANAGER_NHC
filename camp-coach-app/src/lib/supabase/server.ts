@@ -1,10 +1,30 @@
-// /lib/supabase/server.ts
-import { createClient } from "@supabase/supabase-js";
+// lib/supabase/server.ts
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
-// NEVER import this in client components
-export function createServerSupabase() {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+export async function createServerSupabase() {
+  // 👇 In your setup, cookies() is async, so we await it
+  const cookieStore = await cookies();
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, // your anon/publishable key
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // This will throw in pure Server Components (read-only cookies).
+            // Safe to ignore for now.
+          }
+        },
+      },
+    }
   );
 }

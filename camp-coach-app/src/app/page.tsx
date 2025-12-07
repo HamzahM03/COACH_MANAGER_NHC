@@ -2,6 +2,7 @@ import type React from "react"
 import Link from "next/link"
 import { CheckCircle2, UserPlus, Package, Users, DollarSign, BarChart3, Calendar } from "lucide-react"
 
+
 export default function Home() {
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-background">

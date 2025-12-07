@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import Link from "next/link"
 import { Menu } from "lucide-react"
+import { LogoutButton } from "./components/Logout"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" })
@@ -22,7 +23,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
       <body className="font-sans antialiased">
+        
         <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+          <LogoutButton/>
           <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 font-bold text-lg hover:opacity-80 transition-opacity">

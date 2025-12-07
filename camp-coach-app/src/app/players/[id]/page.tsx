@@ -19,7 +19,7 @@ export default async function PlayerProfilePage({
   const { id: playerId } = await params
 
 
-  const supabase = createServerSupabase() // create server client once
+  const supabase = await createServerSupabase() // create server client once
   
 
   // 1) Load player
